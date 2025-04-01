@@ -1,0 +1,38 @@
+import jwt from "jsonwebtoken";
+const { ACCESS_SECRET } = process.env;
+
+// -------------------> Middleware to check valid access token is present or not <------------------
+
+const checkAuth = (req, res, next) => {
+
+    const authHeader = req.get("Authorization");
+    const token = authHeader && authHeader.startsWith("Bearer ") ? authHeader.split(" ")[1] : null;
+
+    if (!token) {
+        return res
+            .status(401)
+            .json({ error: true, errorMsg: "Access denied, token missing!" });
+    } else {
+        try {
+            jwt.verify(token, ACCESS_SECRET);
+            next();
+        } catch (error) {
+            if (error.name === "TokenExpiredError") {
+                return res.status(401).json({
+                    error: true,
+                    errorMsg: "Session timed out, please login again",
+                });
+            } else if (error.name === "JsonWebTokenError") {
+                return res.status(401).json({
+                    error: true,
+                    errorMsg: "Invalid token, please login again!",
+                });
+            } else {
+                console.error(error);
+                return res.status(400).json({ error: true, errorMsg: error });
+            }
+        }
+    }
+};
+
+export default checkAuth;

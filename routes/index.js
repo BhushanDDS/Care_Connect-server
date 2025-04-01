@@ -48,74 +48,39 @@ router.delete("/auth/logout", logout);
 
 // -------------------> Admin <--------------------------
 
-/*
+
 
 router.post("/users/finduser", middleware, (req, res) => {
-  finduser(req, res);
-});
-
-router.get("/users/unverified", middleware, (req, res) => {
-  unverified(req, res);
-});
-
-router.post("/users/unverified/verify", middleware, (req, res) => {
-  verify(req, res);
-});
-
-router.delete("/users/unverified/reject", middleware, (req, res) => {
-  reject(req, res);
-});
-
-router.get("/users/doctors", middleware, (req, res) => {
-  docList(req, res);
-});
-
-router.get("/users/staffs", middleware, (req, res) => {
-  staffList(req, res);
-});
-
-router.get("/users/feedbacks", middleware, (req, res) => {
-  getFeedbacks(req, res);
-});
-
-router.get("/generate/stats", middleware, (req, res) => {
-  generateStats(req, res);
-});
-*/
-
-router.post("/users/finduser", (req, res) => {
     finduser(req, res);
 });
 
-router.get("/users/unverified", (req, res) => {
+router.get("/users/unverified", middleware, (req, res) => {
     unverified(req, res);
 });
 
-router.post("/users/unverified/verify", (req, res) => {
+router.post("/users/unverified/verify", middleware, (req, res) => {
     verify(req, res);
 });
 
-router.delete("/users/unverified/reject", (req, res) => {
+router.delete("/users/unverified/reject", middleware, (req, res) => {
     reject(req, res);
 });
 
-router.get("/users/doctors", (req, res) => {
+router.get("/users/doctors", middleware, (req, res) => {
     docList(req, res);
 });
 
-router.get("/users/staffs", (req, res) => {
+router.get("/users/staffs", middleware, (req, res) => {
     staffList(req, res);
 });
 
-router.get("/users/feedbacks", (req, res) => {
+router.get("/users/feedbacks", middleware, (req, res) => {
     getFeedbacks(req, res);
 });
 
-router.get("/generate/stats", (req, res) => {
+router.get("/generate/stats", middleware, (req, res) => {
     generateStats(req, res);
 });
-
-
 // -------------------> Patient <--------------------------
 
 router.post("/appointment/book", middleware, (req, res) => {

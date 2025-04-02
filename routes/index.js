@@ -22,7 +22,6 @@ import {
 import {
     bookAppointment,
     duePayment,
-    makePayment,
     myAppointments,
     cancelAppointment,
     prescriptions,
@@ -34,7 +33,7 @@ import {
     docFeedbacks,
     uploadPrescription,
 } from "../controllers/doctor.js";
-import { findPatient, regNewUser } from "../controllers/staff.js";
+import { findPatient, regNewUser, acceptPayment } from "../controllers/staff.js";
 
 // -------------------> Authentication <--------------------------
 
@@ -91,9 +90,6 @@ router.post("/appointment/duepayment", middleware, (req, res) => {
     duePayment(req, res);
 });
 
-router.post("/appointment/duepayment/makepayment", middleware, (req, res) => {
-    makePayment(req, res);
-});
 
 router.post("/patient/appointments", middleware, (req, res) => {
     myAppointments(req, res);
@@ -140,5 +136,10 @@ router.post("/staff/find/patient", middleware, (req, res) => {
 router.post("/staff/register", middleware, (req, res) => {
     regNewUser(req, res);
 })
+
+router.post("/staff/payment/accept", middleware, (req, res) => {
+    acceptPayment(req, res);
+});
+
 
 export default router;

@@ -3,6 +3,8 @@ import bcrypt from "bcrypt";
 import nodemailer from "nodemailer";
 import { nanoid } from "nanoid";
 import dotenv from "dotenv";
+import Payment from "../models/payment.js";
+import Appointment from "../models/appointment.js";
 
 dotenv.config(); // Load environment variables
 
@@ -80,4 +82,38 @@ const regNewUser = async(req, res) => {
 };
 
 
-export { findPatient, regNewUser };
+const acceptPayment = async(req, res) => {
+    try {
+        const { aptid, paymentMethod, transactionId } = req.body;
+
+        // Check if the appointment exists
+        const appointment = await Appointment.findOne({ aptid });
+        if (!appointment) {
+            return res.status(404).json({ message: "Appointment not found" });
+        }
+
+        // Create a new payment record using the fee from the appointment
+        const payment = new Payment({
+            aptid,
+            patid: appointment.patid,
+            docid: appointment.docid,
+            amount: appointment.fee, // Use fee from appointment
+            paymentMethod,
+            transactionId,
+            status: "completed",
+        });
+        await payment.save();
+
+        // Link payment to appointment
+        appointment.paymentId = payment._id;
+        await appointment.save();
+
+        res.status(200).json({ message: "Payment accepted successfully", payment });
+    } catch (error) {
+        res.status(500).json({ message: "Server error", error });
+    }
+};
+
+
+
+export { findPatient, regNewUser, acceptPayment };

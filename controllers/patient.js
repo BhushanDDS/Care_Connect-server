@@ -3,19 +3,34 @@ import prescription from "../models/prescription.js";
 
 // -----------------------> Book Appointment <---------------------------
 
+// const bookAppointment = async(req, res) => {
+//     try {
+//         const newAppointment = req.body;
+//         await appointment.create(newAppointment);
+//         return res.status(201).json({
+//             error: false,
+//             msg: "Payment is Due. Confirm your appointment after successful payment.",
+//         });
+//     } catch (error) {
+//         console.error(error);
+//         return res
+//             .status(500)
+//             .json({ error: true, errorMsg: "Internal Server Error!" });
+//     }
+// };
+
+
 const bookAppointment = async(req, res) => {
     try {
         const newAppointment = req.body;
-        await appointment.create(newAppointment);
+        await appointment.create({...newAppointment, paymentId: null }); // Initially, no payment linked
         return res.status(201).json({
             error: false,
-            msg: "Payment is Due. Confirm your appointment after successful payment.",
+            msg: "Appointment booked successfully. Please proceed to staff for payment.",
         });
     } catch (error) {
         console.error(error);
-        return res
-            .status(500)
-            .json({ error: true, errorMsg: "Internal Server Error!" });
+        return res.status(500).json({ error: true, errorMsg: "Internal Server Error!" });
     }
 };
 
@@ -27,7 +42,7 @@ const duePayment = async(req, res) => {
         const unpaid = await appointment.find({
             patid,
             cancel: false,
-            payment: false,
+            paymentId: null,
         });
         if (unpaid.length > 0) {
             return res.status(200).json(unpaid);
@@ -44,30 +59,30 @@ const duePayment = async(req, res) => {
     }
 };
 
-// ---------------------> Make Payment: Update Payment to true <-------------------------
+// // ---------------------> Make Payment: Update Payment to true <-------------------------
 
-const makePayment = async(req, res) => {
-    const { aptid } = req.body;
-    try {
-        const updated = await appointment.findOneAndUpdate({ aptid }, { payment: true });
-        if (updated) {
-            return res.status(200).json({
-                error: false,
-                msg: "Payment Successful. Appointment confirmed.",
-            });
-        } else {
-            res.status(400).json({
-                error: true,
-                errorMsg: "Payment was not successful. Try again!",
-            });
-        }
-    } catch (error) {
-        console.error(error);
-        return res
-            .status(500)
-            .json({ error: true, errorMsg: "Internal Server Error!" });
-    }
-};
+// const makePayment = async(req, res) => {
+//     const { aptid } = req.body;
+//     try {
+//         const updated = await appointment.findOneAndUpdate({ aptid }, { payment: true });
+//         if (updated) {
+//             return res.status(200).json({
+//                 error: false,
+//                 msg: "Payment Successful. Appointment confirmed.",
+//             });
+//         } else {
+//             res.status(400).json({
+//                 error: true,
+//                 errorMsg: "Payment was not successful. Try again!",
+//             });
+//         }
+//     } catch (error) {
+//         console.error(error);
+//         return res
+//             .status(500)
+//             .json({ error: true, errorMsg: "Internal Server Error!" });
+//     }
+// };
 
 // ---------------------> Rturn Appointment List for individual patient <---------------------
 
@@ -222,7 +237,6 @@ const deleteFeedback = async(req, res) => {
 export {
     bookAppointment,
     duePayment,
-    makePayment,
     myAppointments,
     cancelAppointment,
     prescriptions,

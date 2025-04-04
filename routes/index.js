@@ -32,6 +32,7 @@ import {
     docAppointments,
     docFeedbacks,
     uploadPrescription,
+    doctorPrescriptions
 } from "../controllers/doctor.js";
 import { findPatient, regNewUser, acceptPayment } from "../controllers/staff.js";
 
@@ -82,7 +83,7 @@ router.get("/generate/stats", middleware, (req, res) => {
 });
 // -------------------> Patient <--------------------------
 
-router.post("/appointment/book", middleware, (req, res) => {
+router.post("/appointment/book", (req, res) => {
     bookAppointment(req, res);
 });
 
@@ -126,6 +127,9 @@ router.post("/doctor/prescription/upload", middleware, uploadPrescription);
 router.post("/doctor/appointments/feedbacks", middleware, (req, res) => {
     docFeedbacks(req, res);
 });
+
+router.post("/doctor/prescriptions", middleware, doctorPrescriptions);
+
 
 // ----------------------------> Staff <------------------------
 

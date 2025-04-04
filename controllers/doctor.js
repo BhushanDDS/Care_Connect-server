@@ -8,55 +8,28 @@ import Prescription from "../models/prescription.js";
 // import { storage } from "../firebase-config.js";
 
 // -----------------> Upcoming Appointments <-------------------
-
 const docAppointments = async(req, res) => {
     try {
         const { docid } = req.body;
-        const appointments = await appointment.find({ docid, payment: true });
+
+        // Fetch upcoming appointments directly from MongoDB
+        const appointments = await appointment.find({
+            docid,
+            paymentId: { $ne: null }, // Ensures payment is completed
+            doa: { $gte: new Date().toISOString().split("T")[0] }, // Filter future appointments
+        }).exec();
+
         if (appointments.length > 0) {
-            const filteredAppointments = appointments.filter((appointment) => {
-                const appointmentDate = new Date(appointment.doa);
-                const appointmentYear = appointmentDate.getFullYear();
-                const appointmentMonth = appointmentDate.getMonth();
-                const appointmentDay = appointmentDate.getDate();
-
-                const currentDate = new Date();
-                const currentYear = currentDate.getFullYear();
-                const currentMonth = currentDate.getMonth();
-                const currentDay = currentDate.getDate();
-
-                if (
-                    appointmentYear > currentYear ||
-                    (appointmentYear === currentYear &&
-                        (appointmentMonth > currentMonth ||
-                            (appointmentMonth === currentMonth &&
-                                appointmentDay >= currentDay)))
-                ) {
-                    return true;
-                } else {
-                    return false;
-                }
-            });
-
-            if (filteredAppointments.length > 0) {
-                return res.status(200).json(filteredAppointments);
-            } else {
-                return res
-                    .status(404)
-                    .json({ error: true, errorMsg: "No upcoming appointments." });
-            }
+            return res.status(200).json(appointments);
         } else {
-            return res
-                .status(404)
-                .json({ error: true, errorMsg: "No upcoming appointments." });
+            return res.status(404).json({ error: true, errorMsg: "No upcoming appointments." });
         }
     } catch (error) {
-        console.error(error);
-        return res
-            .status(500)
-            .json({ error: true, errorMsg: "Internal Server Error!" });
+        console.error("Error fetching appointments:", error);
+        return res.status(500).json({ error: true, errorMsg: "Internal Server Error!" });
     }
 };
+
 
 // -------------------------> Upload Prescription to Firebase <----------------------
 
@@ -151,6 +124,29 @@ const docFeedbacks = async(req, res) => {
     }
 };
 
+const doctorPrescriptions = async(req, res) => {
+    try {
+        const prescriptions = await Prescription.find({
+            docid: req.body.docid,
+            prescribed: true,
+        });
+
+        if (prescriptions.length > 0) {
+            return res.status(200).json(prescriptions);
+        } else {
+            return res
+                .status(404)
+                .json({ error: true, errorMsg: "No prescriptions found for this doctor!" });
+        }
+    } catch (error) {
+        console.error(error);
+        return res
+            .status(500)
+            .json({ error: true, errorMsg: "Internal Server Error!" });
+    }
+};
+
+
 // exports
 
-export { docAppointments, uploadPrescription, docFeedbacks };
+export { docAppointments, uploadPrescription, docFeedbacks, doctorPrescriptions };

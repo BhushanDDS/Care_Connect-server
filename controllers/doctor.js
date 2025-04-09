@@ -49,9 +49,8 @@ const uploadPrescription = async(req, res) => {
         const doc = new PDFDocument();
         doc.fontSize(20).fillColor("black").text(" Prescription", { align: "center" }).moveDown();
         doc.fontSize(14).text(` Patient Name: ${patname}`);
-        doc.text(`Patient ID: ${patid}`);
-        doc.text(` Doctor Name: ${docname}`);
-        doc.text(` Date: ${new Date().toLocaleDateString("en-IN")}`);
+        doc.text(`Doctor Name: ${docname}`);
+        doc.text(`Date: ${new Date().toLocaleDateString("en-IN")}`);
         doc.moveDown();
         doc.fontSize(12).text(` Prescription Details:\n${details || "No details provided."}`);
 
@@ -170,6 +169,26 @@ const doctorPrescriptions = async(req, res) => {
 };
 
 
+const markAppointmentCompleted = async(req, res) => {
+
+    try {
+        const { aptid } = req.body;
+        console.log(aptid)
+        const apt = await appointment.findOne({ aptid });
+        if (!apt) {
+            return res.status(404).json({ msg: "Appointment not found" });
+        }
+
+        apt.completed = true;
+        await apt.save();
+
+        res.status(200).json({ msg: "Appointment marked as completed" });
+    } catch (error) {
+        res.status(500).json({ msg: "Server error", error });
+    }
+};
+
+
 // exports
 
-export { docAppointments, uploadPrescription, docFeedbacks, doctorPrescriptions };
+export { docAppointments, uploadPrescription, docFeedbacks, doctorPrescriptions, markAppointmentCompleted };

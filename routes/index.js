@@ -8,6 +8,7 @@ import {
     signin,
     generateRefreshToken,
     logout,
+    resetPassword,
 } from "../controllers/authController.js";
 import {
     finduser,
@@ -32,7 +33,9 @@ import {
     docAppointments,
     docFeedbacks,
     uploadPrescription,
-    doctorPrescriptions
+    doctorPrescriptions,
+    markAppointmentCompleted,
+
 } from "../controllers/doctor.js";
 import { findPatient, regNewUser, acceptPayment } from "../controllers/staff.js";
 
@@ -131,6 +134,8 @@ router.post("/doctor/appointments/feedbacks", middleware, (req, res) => {
 router.post("/doctor/prescriptions", middleware, doctorPrescriptions);
 
 
+
+
 // ----------------------------> Staff <------------------------
 
 router.post("/staff/find/patient", middleware, (req, res) => {
@@ -145,5 +150,15 @@ router.post("/staff/payment/accept", middleware, (req, res) => {
     acceptPayment(req, res);
 });
 
+// ----------------------------> Additional <------------------------
+
+router.post("/password/reset", (req, res) => {
+    resetPassword(req, res);
+})
+
+
+router.post("/appointment/complete", (req, res) => {
+    markAppointmentCompleted(req, res);
+})
 
 export default router;

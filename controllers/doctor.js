@@ -4,6 +4,7 @@ import cloudinary from "../middlewares/cloudinaryConfig.js";
 import getStream from 'get-stream'; // Import the get-stream package correctly
 import appointment from "../models/appointment.js";
 import Prescription from "../models/prescription.js";
+import auth from "../models/auth.js";
 // import { ref, getDownloadURL, uploadBytesResumable } from "firebase/storage";
 // import { storage } from "../firebase-config.js";
 
@@ -45,14 +46,103 @@ const uploadPrescription = async(req, res) => {
 
         const fileName = `prescriptions/${Date.now()}_${Math.round(Math.random() * 1e9)}_prescription`;
 
-        // Create PDF document
-        const doc = new PDFDocument();
-        doc.fontSize(20).fillColor("black").text(" Prescription", { align: "center" }).moveDown();
-        doc.fontSize(14).text(` Patient Name: ${patname}`);
-        doc.text(`Doctor Name: ${docname}`);
-        doc.text(`Date: ${new Date().toLocaleDateString("en-IN")}`);
-        doc.moveDown();
-        doc.fontSize(12).text(` Prescription Details:\n${details || "No details provided."}`);
+        const doc = new PDFDocument({ margin: 50 });
+        doc.font("Helvetica");
+
+        // === HEADER ===
+        doc
+            .fontSize(10)
+            .fillColor("#555")
+            .text(`Date: ${new Date().toLocaleDateString("en-IN")}`, 50, 40);
+
+        doc
+            .fontSize(16)
+            .fillColor("#2C3E50")
+            .text("CARECONNECT", { align: "center" });
+
+        doc
+            .fontSize(10)
+            .fillColor("#555")
+            .text("CC", { align: "right" })
+            .moveDown(2);
+
+        // === PATIENT & DOCTOR INFO ===
+        doc
+            .fontSize(12)
+            .fillColor("black")
+            .text(`Patient Name: ${patname}`)
+            .moveDown(0.2)
+            .text(`Doctor Name: ${docname}`)
+            .moveDown(0.5);
+
+        doc
+            .moveTo(50, doc.y)
+            .lineTo(550, doc.y)
+            .strokeColor("#ccc")
+            .lineWidth(1)
+            .stroke()
+            .moveDown(1);
+
+        // === PRESCRIPTION BOX ===
+        doc
+            .fontSize(13)
+            .fillColor("#2C3E50")
+            .text("PRESCRIPTION", { align: "center", underline: true })
+            .moveDown(0.5);
+
+        // Draw light gray box
+        const startY = doc.y;
+        doc
+            .rect(50, startY, 500, 20 + (details.length * 55)) // adjust height
+            .fillOpacity(0.05)
+            .fill("#3498db")
+            .fillOpacity(1)
+            .stroke("#2980b9");
+
+        doc
+            .fillColor("black")
+            .fontSize(12)
+            .text("Details:", 60, startY + 10);
+
+        // Prescription list
+        if (Array.isArray(details) && details.length > 0) {
+            let yPos = startY + 30;
+            details.forEach((item, index) => {
+                doc
+                    .fontSize(11)
+                    .fillColor("black")
+                    .text(`${index + 1}. Medicine: ${item.medicine || "-"}`, 70, yPos)
+                    .text(`Dose: ${item.dose || "-"}`, 100, (yPos += 15))
+                    .text(`Tip: ${item.tip || "-"}`, 100, (yPos += 15));
+                yPos += 10;
+            });
+        } else {
+            doc.text("No prescription details provided.", 70, startY + 30);
+        }
+
+        // === FOOTER SECTION ===
+        doc
+            .moveDown(4)
+            .moveTo(50, doc.y)
+            .lineTo(550, doc.y)
+            .strokeColor("#ccc")
+            .stroke();
+
+        doc
+            .fontSize(12)
+            .fillColor("black")
+            .text("Receiver's Signature: ____________________", 50, doc.y + 20);
+
+        doc
+            .text("Doctor's Signature: ____________________", 350, doc.y + 20, {
+                align: "right",
+            });
+
+        doc
+            .fontSize(8)
+            .fillColor("#999")
+            .text("CARECONNECT Healthcare System", 50, doc.y + 50, { align: "center" });
+        //////////////////////////////
 
         // Create buffers array to collect PDF data
         const chunks = [];
@@ -188,7 +278,56 @@ const markAppointmentCompleted = async(req, res) => {
     }
 };
 
+const generateDoctorStats = async(req, res) => {
+    try {
+        const { uid } = req.body;
+
+        // Get doctor profile
+        const doctor = await auth.findOne({ uid, userType: "Doctor" });
+        if (!doctor) return res.status(404).json({ error: true, msg: "Doctor not found" });
+
+        const docid = doctor.uid;
+
+        // Get all completed appointments of this doctor
+        const completedAppointments = await appointment.find({
+            docid,
+            completed: true,
+        });
+
+        const totalAppointments = completedAppointments.length;
+
+        // Total unique patients consulted
+        const uniquePatients = new Set(completedAppointments.map((apt) => apt.patid)).size;
+
+        // Total earnings
+        const totalEarnings = completedAppointments.reduce((sum, apt) => sum + (apt.fee || 0), 0);
+
+        // Ratings & Feedback
+        const feedbackAppointments = await appointment.find({ docid, feedback: true });
+        const feedbackCount = feedbackAppointments.length;
+
+        const averageRating =
+            feedbackCount > 0 ?
+            (feedbackAppointments.reduce((sum, apt) => sum + (apt.rating || 0), 0) / feedbackCount).toFixed(1) :
+            "No ratings";
+
+        const responseArray = [
+            { subheading: "Doctor Name", heading: `${doctor.fname} ${doctor.lname}` },
+            { subheading: "Speciality", heading: doctor.speciality },
+            { subheading: "Appointments Fulfilled", heading: totalAppointments },
+            { subheading: "Unique Patients Consulted", heading: uniquePatients },
+            { subheading: "Total Revenue Generated", heading: `₹ ${totalEarnings}` },
+            { subheading: "Feedbacks Received", heading: feedbackCount },
+            { subheading: "Average Rating", heading: averageRating },
+        ];
+
+        return res.status(200).json(responseArray);
+    } catch (error) {
+        console.error("Doctor Stats Error:", error);
+        return res.status(500).json({ error: true, errorMsg: "Internal Server Error!" });
+    }
+};
 
 // exports
 
-export { docAppointments, uploadPrescription, docFeedbacks, doctorPrescriptions, markAppointmentCompleted };
+export { docAppointments, uploadPrescription, docFeedbacks, doctorPrescriptions, markAppointmentCompleted, generateDoctorStats };

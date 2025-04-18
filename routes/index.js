@@ -38,7 +38,7 @@ import {
     generateDoctorStats,
 
 } from "../controllers/doctor.js";
-import { findPatient, regNewUser, acceptPayment } from "../controllers/staff.js";
+import { findPatient, regNewUser, acceptPayment, getAppointmentsWithoutPayment, getAllPatients } from "../controllers/staff.js";
 
 // -------------------> Authentication <--------------------------
 
@@ -163,5 +163,17 @@ router.post("/password/reset", (req, res) => {
 router.post("/appointment/complete", (req, res) => {
     markAppointmentCompleted(req, res);
 })
+
+
+router.get("/patients", (req, res) => {
+    getAllPatients(req, res)
+})
+
+router.get("/staff/pending/payments", (req, res) => [
+    getAppointmentsWithoutPayment(req, res)
+])
+
+
+
 
 export default router;

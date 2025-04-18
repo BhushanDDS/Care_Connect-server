@@ -1,4 +1,5 @@
 import auth from "../models/auth.js";
+"../models/auth.js";
 import bcrypt from "bcrypt";
 import nodemailer from "nodemailer";
 import { nanoid } from "nanoid";
@@ -114,6 +115,26 @@ const acceptPayment = async(req, res) => {
     }
 };
 
+const getAllPatients = async(req, res) => {
+    try {
+        const patients = await auth.find({ userType: "Patient" }).select("-password");
+        res.status(200).json(patients);
+    } catch (error) {
+        console.error("Error fetching patients:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
+
+const getAppointmentsWithoutPayment = async(req, res) => {
+    try {
+        const appointments = await Appointment.find({ paymentId: null });
+        res.status(200).json(appointments);
+    } catch (error) {
+        console.error("Error fetching appointments without payment:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
 
 
-export { findPatient, regNewUser, acceptPayment };
+
+export { findPatient, regNewUser, acceptPayment, getAllPatients, getAppointmentsWithoutPayment };

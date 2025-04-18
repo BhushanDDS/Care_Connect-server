@@ -22,8 +22,9 @@ import prescription from "../models/prescription.js";
 
 const bookAppointment = async(req, res) => {
     try {
-        const newAppointment = req.body;
+        const newAppointment = req.body.FormData;
         await appointment.create({...newAppointment, paymentId: null }); // Initially, no payment linked
+        console.log(newAppointment);
         return res.status(201).json({
             error: false,
             msg: "Appointment booked successfully. Please proceed to staff for payment.",

@@ -8,14 +8,11 @@ import dotenv from "dotenv";
 
 const app = express();
 
-const { USER_NAME, PASSWORD } = process.env;
-const uri = "mongodb+srv://bhushanshirsat637:Bhushan%4034@cluster0.ihqw5.mongodb.net/medcare?retryWrites=true&w=majority&appName=Cluster0";
+const { USER_NAME, PASSWORD,URI } = process.env;
 
-//use the following uri when running local MongoDB server
-// const uri = "mongodb://127.0.0.1:27017/MedCare";
 
 mongoose
-    .connect(uri, {
+    .connect(process.env.URI, {
         useNewUrlParser: true,
         useUnifiedTopology: true,
     })
